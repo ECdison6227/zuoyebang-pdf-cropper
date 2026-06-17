@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>zuoyebang-pdf-cropper README 预览</title>
+<style>
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; color: #24292f; line-height: 1.6; }
+img.banner { width: 100%; border-radius: 8px; margin: 20px 0; }
+h1, h2, h3 { color: #1f2328; }
+h1 { border-bottom: 2px solid #d0d7de; padding-bottom: 10px; }
+h2 { border-bottom: 1px solid #d0d7de; padding-bottom: 8px; margin-top: 40px; }
+h3 { margin-top: 28px; }
+table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+th, td { border: 1px solid #d0d7de; padding: 8px 12px; text-align: left; }
+th { background: #f6f8fa; }
+code { background: #f6f8fa; padding: 2px 6px; border-radius: 4px; font-family: "SF Mono", Monaco, monospace; font-size: 0.9em; }
+pre { background: #f6f8fa; padding: 16px; border-radius: 8px; overflow-x: auto; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #d0d7de; margin: 16px 0; padding: 8px 16px; color: #57606a; background: #f6f8fa; }
+.center { text-align: center; color: #57606a; }
+a { color: #0969da; }
+hr { border: none; border-top: 1px solid #d0d7de; margin: 32px 0; }
+.example-img { width: 100%; border: 1px solid #d0d7de; border-radius: 8px; margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<h1>作业帮错题处理套件</h1>
+
+<img class="banner" src="assets/banner.png" alt="banner">
+
+<p class="center">两个 Python skill：处理作业帮错题本 PDF → 生成讲义 → 切分为独立错题图片</p>
+
+<p class="center">
+<a href="https://note.edsionc.top">📚 知识点笔记</a> ·
+<a href="#快速开始">🚀 快速开始</a> ·
+<a href="#完整案例">📖 完整案例</a> ·
+<a href="README.en.md">English</a>
+</p>
+
+<hr>
+
+<h2>前言：为什么写这两个 skill</h2>
+
+<p>我做小班线上补课，小学、初中的数学、物理、化学，偶尔也会接英语，A level 和 IB 也在做。班小，每个学生错的题不一样，我不想让所有人都刷同一份卷子——会做的题重复做很浪费时间。</p>
+
+<p>我习惯把题分成三类：</p>
+<ul>
+<li><strong>一类题</strong>：看了教辅知识点就能做。</li>
+<li><strong>二类题</strong>：看了教辅后，给足够时间能想出来。</li>
+<li><strong>三类题</strong>：只有见过才会做，没见过基本做不出来（很多是大学知识下放）。</li>
+</ul>
+
+<p>这两个 skill 就是服务于<strong>三类题</strong>的：把作业帮错题本导出的 PDF 先做成讲义，再把每道题单独切出来，按学生拼接成每个人专属的错题本。不会的题反复练，会的题不再重复刷。</p>
+
+<p>目前学科知识点识别主要覆盖 <strong>数学、物理、化学</strong>。英语识别逻辑写了但还没实测，A level 和 IB 因为太小众暂时没有放出来。（小众赛道的朋友可以直接发邮件交流，邮箱在文末。）</p>
+
+<h2>两个 Skill 的定位</h2>
+
+<p>这个仓库是<strong>两个 skill 的包</strong>，互相独立，也可以串起来用：</p>
+
+<table>
+<thead><tr><th>#</th><th>Skill</th><th>作用</th><th>输入</th><th>输出</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><a href="skills/mistake-notebook-processor/">mistake-notebook-processor</a></td><td>处理作业帮 PDF：去品牌、加页眉页脚、生成带封面的讲义</td><td>作业帮错题本 PDF</td><td>个性化讲义 PDF</td></tr>
+<tr><td>2</td><td><a href="skills/pdf-question-cropper/">pdf-question-cropper</a></td><td>按题号把讲义切成独立图片</td><td>讲义 PDF</td><td>每道题的 PNG + 裁剪报告</td></tr>
+</tbody>
+</table>
+
+<h3>推荐工作流</h3>
+
+<pre><code>┌─────────────┐     ┌─────────────────────────────┐     ┌─────────────────┐
+│ 作业帮 App  │ ──→ │  mistake-notebook-processor │ ──→ │  个性化讲义 PDF  │
+│ 导出错题本  │     │  （首次自定义页眉页脚）      │     │                 │
+└─────────────┘     └─────────────────────────────┘     └────────┬────────┘
+                                                                 │
+                                                                 ↓
+┌─────────────┐     ┌─────────────────┐     ┌─────────────────────────┐
+│ 每个学生拿到 │ ←── │  按学生拼接错题  │ ←── │   pdf-question-cropper  │
+│ 专属错题本  │     │  （只练不会的）  │     │   切成独立题目图片       │
+└─────────────┘     └─────────────────┘     └─────────────────────────┘</code></pre>
+
+<blockquote>
+💡 不会用？直接把本仓库地址 <code>https://github.com/ECdison6227/zuoyebang-pdf-cropper</code> 丢给 AI，让它帮你装环境、改配置、跑起来。
+</blockquote>
+
+<h3>关于页眉页脚</h3>
+
+<p>第一次使用 <strong>mistake-notebook-processor</strong> 时，建议先打开 <code>process_mistake.py</code> 修改一次页眉、页脚和提示语，改成你自己的信息（比如你的知识点站点、联系方式）。修改一次后，后续每次调用这个 skill 都会沿用这套配置。</p>
+
+<h2>能做什么 / 不能做什么</h2>
+
+<h3>能做什么</h3>
+
+<table>
+<thead><tr><th>场景</th><th>效果</th></tr></thead>
+<tbody>
+<tr><td>作业帮单列导出的错题本 PDF</td><td>自动去掉顶部 logo 和底部页码</td></tr>
+<tr><td>已处理过的作业帮讲义</td><td>自动去掉页眉页脚，识别题型</td></tr>
+<tr><td>跨页题目</td><td>自动把跨页题拼成一道完整的题</td></tr>
+<tr><td>底部带图的题目</td><td>接近页底时保守截取，不把图切掉</td></tr>
+<tr><td>最后一题</td><td>截到实际内容底部，不会截整页空白</td></tr>
+<tr><td>知识点识别</td><td>自动识别数学/物理/化学/生物等学科知识点，写入讲义封面</td></tr>
+<tr><td>个性化讲义</td><td>自动生成封面（注意要点、知识点、掌握情况打勾表）+ 页眉提示页脚</td></tr>
+</tbody>
+</table>
+
+<h3>不能做什么</h3>
+
+<ul>
+<li><strong>必须是从作业帮单列导出的错题本 PDF</strong>。切分 skill 的题号正则和品牌区域是按作业帮格式硬编码的，其他题库的 PDF 不会切分（但讲义生成 skill 仍可识别知识点并生成封面）。</li>
+<li><strong>扫描版 PDF 不支持</strong>：纯图片无文字层的 PDF 识别不了题号，需要自己加 OCR。</li>
+<li><strong>手写题不支持</strong>：只处理印刷体题号。</li>
+<li><strong>非单列排版不支持</strong>：不处理多栏或密集答题卡排版。</li>
+<li><strong>英语、A level、IB</strong>：英语已写识别逻辑但未实测；A level 和 IB 暂未放出。</li>
+</ul>
+
+<h2 id="快速开始">快速开始</h2>
+
+<h3>环境准备</h3>
+<pre><code>pip install pymupdf Pillow</code></pre>
+
+<h3>Skill 1：mistake-notebook-processor（生成讲义）</h3>
+<p>第一次使用前，先修改 <code>skills/mistake-notebook-processor/process_mistake.py</code> 里的页眉页脚信息：</p>
+<pre><code># 示例默认值
+ftr = "edsionc.top  |  2014184720@qq.com"  # 改成你的站点和联系方式</code></pre>
+<p>也可以改 <code>SUBJECT_RULES</code> 和 <code>SUBJECT_TIPS</code> 里的提示语。</p>
+<pre><code>cd skills/mistake-notebook-processor
+python3 process_mistake.py 你的错题本.pdf</code></pre>
+
+<h3>Skill 2：pdf-question-cropper（切分题目）</h3>
+<pre><code>cd skills/pdf-question-cropper
+python3 crop_questions.py 讲义.pdf</code></pre>
+<p>不指定输出目录时，会在当前目录生成 <code>&lt;PDF名&gt;_题目图片/</code>。</p>
+
+<h3>不想用 skill，直接用代码？</h3>
+<p>可以。每个 skill 目录下都有独立的 Python 脚本，直接 <code>python3 xxx.py</code> 就能跑。但建议用 skill 的方式调用，因为 skill 里包含了完整的触发条件、配置说明和踩坑记录。</p>
+
+<h2>标准 Prompt</h2>
+
+<h3>生成讲义</h3>
+<blockquote>
+请用 mistake-notebook-processor skill 处理这份作业帮错题本 PDF：<br>
+- 去掉顶部 logo 和底部页码<br>
+- 生成带封面的讲义，封面包含：整理日期、注意要点、本次知识点、题目掌握情况打勾表<br>
+- 页眉格式：日期 | 知识点 | 学科；页脚放我的站点 edsionc.top<br>
+- 输出文件名为：学科讲义-日期.pdf
+</blockquote>
+
+<h3>切分题目</h3>
+<blockquote>
+请用 pdf-question-cropper skill 把这份讲义 PDF 按题号切成独立图片：<br>
+- 自动识别并跳过封面页<br>
+- 跨页题目要自动合并<br>
+- 底部带图的题不要把图切掉<br>
+- 最后一题只截到实际内容底部<br>
+- 输出每道题的 PNG 和裁剪报告
+</blockquote>
+
+<h2 id="完整案例">完整案例：一份 6 页 15 题的数学讲义</h2>
+
+<p>输入文件：<a href="examples/输入/数学讲义-20260616.pdf">examples/输入/数学讲义-20260616.pdf</a></p>
+
+<p>先生成讲义，再切分：</p>
+<pre><code># 生成讲义（如果用 process_mistake.py 处理原始作业帮 PDF）
+python3 skills/mistake-notebook-processor/process_mistake.py examples/输入/数学讲义-20260616.pdf
+
+# 切分题目
+python3 skills/pdf-question-cropper/crop_questions.py examples/输入/数学讲义-20260616.pdf examples/输出</code></pre>
+
+<p>输出 15 张独立题目图片 + 裁剪报告：</p>
+<pre><code>源PDF文件: 数学讲义-20260616.pdf
+PDF类型: 已处理讲义
+学科: 数学
+总页数: 6
+跳过封面页: [1]
+裁剪题目总数: 15
+识别知识点: 立体几何、角、线段、正方形
+
+  题目_01.png - 第2页 [第1题]
+  ...
+  题目_04.png - 第2页 [第4题] (跨页合并: 第2页-第3页)
+  ...
+  题目_15.png - 第6页 [第15题]</code></pre>
+
+<h3>三个容易切错的点</h3>
+<h4>1. 跨页题目：第 4 题</h4>
+<p>全局排序所有题号，看下一页第一个题号离页眉有多远。贴在页顶 → 新题；离页顶很远 → 上一题的续页。</p>
+<img class="example-img" src="examples/效果对比/跨页合并_第4题.png" alt="跨页合并对比">
+
+<h4>2. 底部带图：第 7 题</h4>
+<p>当文本底部离页底很近时，宁可多截一点，把页底也包含进来，避免图被切掉。</p>
+<img class="example-img" src="examples/效果对比/底部图片保护_第7题.png" alt="底部图片保护对比">
+
+<h4>3. 最后一题：第 15 题</h4>
+<p>扫描文本 spans 找实际内容最底部，只在那下面留 30px 空白。</p>
+<img class="example-img" src="examples/效果对比/最后一题_第15题.png" alt="最后一题对比">
+
+<h2>工作原理</h2>
+
+<h3>Skill 1：mistake-notebook-processor</h3>
+<ol>
+<li><strong>读取全文</strong>：扫描所有页面文本，正则匹配知识点字典。</li>
+<li><strong>创建封面</strong>：生成封面页，包含学科标题、整理日期、注意要点、知识点列表、题目掌握情况打勾表。</li>
+<li><strong>正文去品牌</strong>：用 <code>redaction</code> 物理删除顶部 logo（y=0~68）和底部页码（y=795~842）。</li>
+<li><strong>叠加页眉页脚</strong>：居中绘制页眉（日期|知识点|学科）、提示行、页脚。</li>
+<li><strong>合并输出</strong>：封面在前，正文在后，保存为 <code>学科讲义-日期.pdf</code>。</li>
+</ol>
+
+<h3>Skill 2：pdf-question-cropper</h3>
+<ol>
+<li><strong>检测 PDF 类型</strong>：区分原始作业帮 PDF、已处理讲义、通用 PDF。</li>
+<li><strong>找题号</strong>：用 <code>get_text("dict")</code> 的 line/span 级别提取文本，合并同行 span 后匹配题目序号。</li>
+<li><strong>全局排序</strong>：所有非封面页题号按 <code>(page_index, y)</code> 排序。</li>
+<li><strong>跨页判断</strong>：下一页首个题号离页眉距离 &gt;= 80px 视为当前题续页，执行部分页拼接。</li>
+<li><strong>内容边界保护</strong>：不跨页且同页无下一题的题，扫描文本找实际内容底部；若接近页底（&lt;120px），保守截到页底。</li>
+<li><strong>切分输出</strong>：按题号裁剪页面区域，跨页题垂直拼接。</li>
+</ol>
+
+<h2>关键配置</h2>
+
+<table>
+<thead><tr><th>常量</th><th>默认值</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><code>ZYB_TOP_BRAND</code></td><td>68</td><td>原始作业帮 PDF 顶部 logo 高度</td></tr>
+<tr><td><code>ZYB_BOTTOM_FOOTER</code></td><td>47</td><td>原始作业帮 PDF 底部页码高度</td></tr>
+<tr><td><code>PROCESSED_HEADER</code></td><td>68</td><td>已处理讲义页眉高度</td></tr>
+<tr><td><code>PROCESSED_FOOTER</code></td><td>33</td><td>已处理讲义页脚高度</td></tr>
+<tr><td><code>CROSS_PAGE_THRESHOLD</code></td><td>80</td><td>跨页判断阈值</td></tr>
+<tr><td><code>BOTTOM_MARGIN_THRESHOLD</code></td><td>120</td><td>内容底部接近页底阈值</td></tr>
+</tbody>
+</table>
+
+<h2>踩坑记录</h2>
+<ul>
+<li><strong>文本块粒度</strong>：早期用 <code>get_text("blocks")</code> 导致"第 1 题"和正文被拆成两块，15 题切出 30 张图。改用 <code>get_text("dict")</code> 解决。</li>
+<li><strong>小问序号误识别</strong>：<code>(1)</code>、<code>①</code> 被当成新题。加了 <code>SUBQUESTION_PATTERN</code> 排除。</li>
+<li><strong>封面页误切</strong>：封面"掌握情况"里的"第 X 题"被当成题号。加了 <code>COVER_PATTERN</code> 跳过。</li>
+<li><strong>跨页判断错误</strong>：第 7、14 题被误拼下一页。改成全局题号序列 + 距离阈值判断。</li>
+<li><strong>底部图片被切</strong>：第 7 题图只剩一半。增加"接近页底保守截"逻辑。</li>
+</ul>
+
+<h2>关联资源</h2>
+<ul>
+<li><strong><a href="https://note.edsionc.top">Note.edsionc.top</a></strong>：我的知识点笔记站点，讲义里识别到的知识点对应到这里。切出来的错题图片后续也会整理进去。</li>
+</ul>
+
+<h2>交流与合作</h2>
+<p>如果你也在做小班教学、错题本整理，欢迎参考这个仓库。</p>
+<p>我们的工作室目前招收小学、初中 <strong>数学、物理、化学、英语</strong> 学生，也做 <strong>A level 和 IB</strong> 课程。A level 和 IB 的内容比较小众，暂时没有开源出来，但有需求可以联系我交流。</p>
+<p>📮 邮箱：<strong>2014184720@qq.com</strong></p>
+
+<h2>限制与后续</h2>
+<ul>
+<li>主要针对 A4 页面调试，其他尺寸需要改裁剪区域。</li>
+<li>多栏排版 PDF 尚未处理。</li>
+<li>切分 skill 只支持作业帮导出的 PDF；讲义生成 skill 对非作业帮 PDF 仍可识别知识点。</li>
+<li>英语识别逻辑已写但未实测，后续会补案例。</li>
+</ul>
+
+<h2>License</h2>
+<p>MIT</p>
+
+<hr>
+<p class="center" style="color: #999; font-size: 0.85em;">这是 README 的本地 HTML 预览。确认没问题后，我会推送到 GitHub。</p>
+
+</body>
+</html>
