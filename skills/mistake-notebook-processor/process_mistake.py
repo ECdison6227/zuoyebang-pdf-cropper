@@ -4,7 +4,20 @@
 """
 import fitz, re, os, sys
 
+# ── 参数校验 ──
+if len(sys.argv) < 2:
+    print("用法: python3 process_mistake.py <输入PDF>")
+    sys.exit(1)
+
 INPUT = sys.argv[1]
+
+if not os.path.exists(INPUT):
+    print(f"错误: 文件不存在 → {INPUT}")
+    sys.exit(1)
+
+if not INPUT.lower().endswith(".pdf"):
+    print(f"错误: 不是 PDF 文件 → {INPUT}")
+    sys.exit(1)
 
 basename = os.path.splitext(os.path.basename(INPUT))[0]
 date_str = None
@@ -155,9 +168,35 @@ if len(matched) <= 3:
 else:
     cover_topics = f"{topic_str}\n（共 {len(matched)} 个知识点）"
 
-# ── 字体 ──
-with open("/System/Library/Fonts/Supplemental/Songti.ttc", "rb") as f:
-    CJK_DATA = f.read()
+# ── 字体（跨平台查找 CJK 宋体）──
+FONT_CANDIDATES = [
+    # macOS
+    "/System/Library/Fonts/Supplemental/Songti.ttc",
+    "/System/Library/Fonts/Hiragino Sans GB.ttc",
+    # Linux (常见发行版)
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/wqy-zenhei/wqy-zenhei.ttc",
+    "/usr/share/fonts/wqy-microhei/wqy-microhei.ttc",
+    # Windows
+    "C:/Windows/Fonts/simsun.ttc",
+    "C:/Windows/Fonts/msyh.ttc",
+]
+
+CJK_DATA = None
+for _path in FONT_CANDIDATES:
+    if os.path.exists(_path):
+        with open(_path, "rb") as f:
+            CJK_DATA = f.read()
+        break
+
+if CJK_DATA is None:
+    print("错误: 未找到 CJK 字体文件。请安装以下任一字体：")
+    print("  macOS:   系统自带 Songti.ttc")
+    print("  Linux:   sudo apt install fonts-noto-cjk")
+    print("  Windows: 系统自带 simsun.ttc")
+    sys.exit(1)
+
 FONT = "MySongti"
 MEASURE = fitz.Font(fontbuffer=CJK_DATA)
 def tw(text, fs):
