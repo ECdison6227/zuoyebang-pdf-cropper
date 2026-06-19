@@ -1,4 +1,10 @@
-![作业帮错题处理套件](assets/banner.png)
+<p align="center">
+  <a href="README.md">中文</a> | <a href="README.en.md">English</a>
+</p>
+
+<p align="center">
+  <img src="assets/banner.svg" alt="作业帮错题处理套件" width="100%"/>
+</p>
 
 <p align="center">
   两个 Python skill：处理作业帮错题本 PDF → 生成讲义 → 切分为独立错题图片
@@ -7,9 +13,24 @@
 <p align="center">
   <a href="https://note.edsionc.top">📚 知识点笔记</a> ·
   <a href="#快速开始">🚀 快速开始</a> ·
-  <a href="#完整案例">📖 完整案例</a> ·
-  <a href="README.en.md">English</a>
+  <a href="#完整案例">📖 完整案例</a>
 </p>
+
+---
+
+## 一键使用
+
+如果你不想手动配置，直接把下面这段 prompt 发给你的 Coding Agent（Trae / Codex / Claude Code），它会自动完成安装并解释用法：
+
+```text
+请帮我安装并配置 https://github.com/ECdison6227/zuoyebang-pdf-cropper 这个仓库：
+
+1. 先 git clone 到临时目录
+2. 安装依赖：pip install -r requirements.txt
+3. 告诉我这两个 Skill 分别是做什么的、触发词是什么
+4. 打开 process_mistake.py，引导我修改页眉、页脚和提示语成我的信息
+5. 如果有示例 PDF，演示如何生成讲义和切分题目
+```
 
 ---
 

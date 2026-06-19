@@ -1,0 +1,57 @@
+<mxfile host="app.diagrams.net" modified="2026-06-17T12:00:00.000Z" agent="Mozilla/5.0" etag="zuoyebang-pdf-cropper" version="24.0.0" type="device">
+  <diagram name="banner">
+    <mxGraphModel dx="1280" dy="640" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1280" pageHeight="640" math="0" shadow="1">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="作业帮错题处理套件" style="text;html=1;align=center;verticalAlign=middle;fontSize=48;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="365" y="50" width="550" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="处理错题本 PDF → 生成讲义 → 切分为独立题目图片" style="text;html=1;align=center;verticalAlign=middle;fontSize=20;fontColor=#6b7280;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="340" y="105" width="600" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="input" value="作业帮 App&lt;br&gt;&lt;font style=&amp;quot;font-size:13px; color:#6b7280&amp;quot;&gt;导出错题本 PDF&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6366f1;fontSize=18;fontStyle=1;arcSize=6" vertex="1" parent="1">
+          <mxGeometry x="60" y="200" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="skill1" value="mistake-notebook-processor&lt;br&gt;&lt;font style=&amp;quot;font-size:13px; color:#6b7280&amp;quot;&gt;去品牌 · 加封面 · 生成讲义&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#3b82f6;fontSize=17;fontStyle=1;arcSize=6" vertex="1" parent="1">
+          <mxGeometry x="360" y="190" width="260" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="handout" value="个性化讲义 PDF&lt;br&gt;&lt;font style=&amp;quot;font-size:13px; color:#6b7280&amp;quot;&gt;封面 + 页眉页脚&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#10b981;fontSize=18;fontStyle=1;arcSize=6" vertex="1" parent="1">
+          <mxGeometry x="700" y="200" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="skill2" value="pdf-question-cropper&lt;br&gt;&lt;font style=&amp;quot;font-size:13px; color:#6b7280&amp;quot;&gt;按题号切分 · 跨页合并&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#f59e0b;fontSize=17;fontStyle=1;arcSize=6" vertex="1" parent="1">
+          <mxGeometry x="940" y="190" width="240" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="out1" value="题目图片&lt;br&gt;&lt;font style=&amp;quot;font-size:12px; color:#6b7280&amp;quot;&gt;第 1 题 · 第 2 题 · ...&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#8b5cf6;fontSize=16;fontStyle=1;arcSize=6" vertex="1" parent="1">
+          <mxGeometry x="140" y="410" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="out2" value="裁剪报告&lt;br&gt;&lt;font style=&amp;quot;font-size:12px; color:#6b7280&amp;quot;&gt;题号 · 页码 · 知识点&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#8b5cf6;fontSize=16;fontStyle=1;arcSize=6" vertex="1" parent="1">
+          <mxGeometry x="400" y="410" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="out3" value="每个学生专属错题本&lt;br&gt;&lt;font style=&amp;quot;font-size:12px; color:#6b7280&amp;quot;&gt;只练不会的题&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef4444;fontSize=17;fontStyle=1;dashed=1;arcSize=6" vertex="1" parent="1">
+          <mxGeometry x="740" y="410" width="320" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6b7280;fontSize=14" edge="1" parent="1" source="input" target="skill1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6b7280;fontSize=14" edge="1" parent="1" source="skill1" target="handout">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6b7280;fontSize=14" edge="1" parent="1" source="handout" target="skill2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6b7280;fontSize=14" edge="1" parent="1" source="skill2" target="out3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1060" y="380"/>
+              <mxPoint x="900" y="380"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="footer" value="for teachers and tutors using Zuoyebang" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#9ca3af;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="440" y="580" width="400" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

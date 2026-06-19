@@ -1,4 +1,10 @@
-![Zuoyebang Mistake Worksheet Suite](assets/banner.png)
+<p align="center">
+  <a href="README.md">中文</a> | <a href="README.en.md">English</a>
+</p>
+
+<p align="center">
+  <img src="assets/banner.svg" alt="Zuoyebang Mistake Worksheet Suite" width="100%"/>
+</p>
 
 <p align="center">
   Two Python skills: process Zuoyebang PDFs → generate handouts → crop into individual question images
@@ -7,9 +13,24 @@
 <p align="center">
   <a href="https://note.edsionc.top">📚 Knowledge Notes</a> ·
   <a href="#quick-start">🚀 Quick Start</a> ·
-  <a href="#full-example">📖 Full Example</a> ·
-  <a href="README.md">中文</a>
+  <a href="#full-example">📖 Full Example</a>
 </p>
+
+---
+
+## One-click Setup
+
+If you don't want to configure manually, paste this prompt into your Coding Agent (Trae / Codex / Claude Code) and let it do the rest:
+
+```text
+Please install and configure https://github.com/ECdison6227/zuoyebang-pdf-cropper:
+
+1. Git clone the repo into a temporary directory
+2. Install dependencies: pip install -r requirements.txt
+3. Tell me what the two skills do and their trigger words
+4. Open process_mistake.py and guide me to customize the header/footer/tips to my own info
+5. If a sample PDF is available, demo how to generate the handout and crop the questions
+```
 
 ---
 
