@@ -23,13 +23,13 @@
           <mxGeometry x="940" y="190" width="240" height="110" as="geometry" />
         </mxCell>
         <mxCell id="out1" value="题目图片&lt;br&gt;&lt;font style=&amp;quot;font-size:12px; color:#6b7280&amp;quot;&gt;第 1 题 · 第 2 题 · ...&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#8b5cf6;fontSize=16;fontStyle=1;arcSize=6" vertex="1" parent="1">
-          <mxGeometry x="140" y="410" width="180" height="80" as="geometry" />
+          <mxGeometry x="160" y="410" width="180" height="80" as="geometry" />
         </mxCell>
         <mxCell id="out2" value="裁剪报告&lt;br&gt;&lt;font style=&amp;quot;font-size:12px; color:#6b7280&amp;quot;&gt;题号 · 页码 · 知识点&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#8b5cf6;fontSize=16;fontStyle=1;arcSize=6" vertex="1" parent="1">
-          <mxGeometry x="400" y="410" width="180" height="80" as="geometry" />
+          <mxGeometry x="440" y="410" width="180" height="80" as="geometry" />
         </mxCell>
         <mxCell id="out3" value="每个学生专属错题本&lt;br&gt;&lt;font style=&amp;quot;font-size:12px; color:#6b7280&amp;quot;&gt;只练不会的题&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef4444;fontSize=17;fontStyle=1;dashed=1;arcSize=6" vertex="1" parent="1">
-          <mxGeometry x="740" y="410" width="320" height="80" as="geometry" />
+          <mxGeometry x="760" y="410" width="320" height="80" as="geometry" />
         </mxCell>
         <mxCell id="a1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6b7280;fontSize=14" edge="1" parent="1" source="input" target="skill1">
           <mxGeometry relative="1" as="geometry" />
@@ -43,8 +43,8 @@
         <mxCell id="a4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6b7280;fontSize=14" edge="1" parent="1" source="skill2" target="out3">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1060" y="380"/>
-              <mxPoint x="900" y="380"/>
+              <mxPoint x="1060" y="360"/>
+              <mxPoint x="920" y="360"/>
             </Array>
           </mxGeometry>
         </mxCell>
