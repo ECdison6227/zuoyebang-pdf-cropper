@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/banner.svg" alt="Zuoyebang Mistake Worksheet Suite" width="100%"/>
+  <img src="assets/readme/hero.svg" alt="Zuoyebang Mistake Worksheet Suite" width="100%"/>
 </p>
 
 <p align="center">

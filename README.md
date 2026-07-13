@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/banner.svg" alt="作业帮错题处理套件" width="100%"/>
+  <img src="assets/readme/hero.svg" alt="作业帮错题处理套件" width="100%"/>
 </p>
 
 <p align="center">
