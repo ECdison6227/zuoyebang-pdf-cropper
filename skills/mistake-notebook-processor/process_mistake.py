@@ -2,7 +2,8 @@
 """
 处理作业帮错题本 PDF —— 遮盖品牌 + 封面页 + 自动识别知识点
 """
-import fitz, re, os, sys
+import fitz, re, os, sys, datetime
+from subset_fonts import subset_pdf_fonts
 
 # ── 参数校验 ──
 if len(sys.argv) < 2:
@@ -22,6 +23,8 @@ if not INPUT.lower().endswith(".pdf"):
 basename = os.path.splitext(os.path.basename(INPUT))[0]
 date_str = None
 subject = None
+course_topic = None
+lecture_num = None
 
 parts = basename.split("-")
 for p in parts:
@@ -31,6 +34,16 @@ for p in parts:
         date_str = f"{d[:4]}.{d[4:6]}.{d[6:]}"
     elif p in ("数学", "物理", "化学", "英语", "语文", "生物"):
         subject = p
+    else:
+        m_lec = re.search(r"第(\d+)讲", p)
+        if m_lec:
+            lecture_num = m_lec.group(1)
+        elif p:
+            # 第一个非学科非讲次的中间部分作为课程主题
+            course_topic = p
+
+# 无日期时使用今天
+date_str = date_str or datetime.date.today().strftime("%Y.%m.%d")
 
 # ── 读完整 PDF 分析知识点 + 提取题号 ──
 doc_tmp = fitz.open(INPUT)
@@ -156,11 +169,15 @@ for name, patterns in TOPICS:
             break
 
 subj = subject or "未知学科"
-date_compact = date_str.replace(".", "") if date_str else ""
-topic_str = "、".join(matched) if matched else "综合"
+topic_str = "、".join(matched) if matched else (course_topic or "综合")
 
-# ── 输出文件名：学科讲义-日期.pdf ──
-outname = f"{subj}讲义-{date_compact}.pdf"
+# ── 输出文件名：学科-课程主题-第x讲.pdf ──
+if course_topic and lecture_num:
+    outname = f"{subj}-{course_topic}-第{lecture_num}讲.pdf"
+else:
+    # 兼容旧命名
+    date_compact = date_str.replace(".", "")
+    outname = f"{subj}讲义-{date_compact}.pdf"
 
 # 封面用的知识点标题
 if len(matched) <= 3:
@@ -173,7 +190,9 @@ FONT_CANDIDATES = [
     # macOS
     "/System/Library/Fonts/Supplemental/Songti.ttc",
     "/System/Library/Fonts/Hiragino Sans GB.ttc",
-    # Linux (常见发行版)
+    # Linux (常见发行版 / CentOS)
+    "/usr/share/fonts/google-noto-cjk/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/google-noto-cjk/NotoSansCJK-Bold.ttc",
     "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/wqy-zenhei/wqy-zenhei.ttc",
@@ -304,12 +323,14 @@ doc = fitz.open(INPUT)
 hdr_title = f"{matched[0]}, {matched[1]} 等" if len(matched) > 2 else (topic_str if matched else "综合")
 
 for page in doc:
-    page.add_redact_annot(fitz.Rect(0, 0, PW, 68), fill=(1, 1, 1))
-    page.add_redact_annot(fitz.Rect(0, PH - 47, PW, PH), fill=(1, 1, 1))
+    pw, ph = page.rect.width, page.rect.height
+    # 用 redaction 真正删除原始页眉页脚（作业帮 logo / 页码）
+    page.add_redact_annot(fitz.Rect(0, 0, pw, 68), fill=(1, 1, 1))
+    page.add_redact_annot(fitz.Rect(0, ph - 47, pw, ph), fill=(1, 1, 1))
     page.apply_redactions()
     page.insert_font(fontbuffer=CJK_DATA, fontname=FONT)
     hdr = f"{date_str}  |  {hdr_title}  |  {subj}"
-    x = (PW - tw(hdr, 9)) / 2
+    x = (pw - tw(hdr, 9)) / 2
     page.insert_text((x, MP + 14), hdr, fontname=FONT, fontsize=9, color=(0.35, 0.35, 0.35))
     SUBJECT_TIPS = {
         "数学": "提示：图形题用铅笔作图 | 卡住时检查未用条件 | 适当跳题",
@@ -318,11 +339,11 @@ for page in doc:
         "生物": "提示：遗传题画遗传图解 | 回归课本概念 | 适当跳题",
     }
     tip = SUBJECT_TIPS.get(subj, SUBJECT_TIPS["数学"])
-    x = (PW - tw(tip, 7)) / 2
+    x = (pw - tw(tip, 7)) / 2
     page.insert_text((x, MP + 28), tip, fontname=FONT, fontsize=7, color=(0.65, 0.65, 0.65))
     ftr = "edsionc.top  |  2014184720@qq.com"
-    x = (PW - tw(ftr, 8)) / 2
-    page.insert_text((x, PH - MP + 4), ftr, fontname=FONT, fontsize=8, color=(0.55, 0.55, 0.55))
+    x = (pw - tw(ftr, 8)) / 2
+    page.insert_text((x, ph - MP + 4), ftr, fontname=FONT, fontsize=8, color=(0.55, 0.55, 0.55))
 
 # ── 封面在前 ──
 cover.insert_pdf(doc)
@@ -335,5 +356,14 @@ while os.path.exists(output):
 cover.save(output, garbage=4, deflate=True)
 cover.close()
 doc.close()
-print(f"✅ {os.path.basename(output)}")
-print(f"   知识点: {topic_str}")
+
+# ── 字体子集化：从源头减小文件体积 ──
+try:
+    result = subset_pdf_fonts(output, verbose=False)
+    print(f"✅ {os.path.basename(output)}")
+    print(f"   知识点: {topic_str}")
+    print(f"   体积: {result['original_size']/1024/1024:.2f} MB → {result['subset_size']/1024/1024:.2f} MB (压缩 {result['ratio']:.1f}%)")
+except Exception as e:
+    print(f"✅ {os.path.basename(output)}")
+    print(f"   知识点: {topic_str}")
+    print(f"   字体子集化失败（不影响使用）: {e}")
