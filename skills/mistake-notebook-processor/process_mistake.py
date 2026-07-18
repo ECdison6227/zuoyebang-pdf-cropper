@@ -2,8 +2,9 @@
 """
 处理作业帮错题本 PDF —— 遮盖品牌 + 封面页 + 自动识别知识点
 """
-import fitz, re, os, sys, datetime
+import fitz, re, os, sys, datetime, io
 from subset_fonts import subset_pdf_fonts
+from fontTools import ttLib
 
 # ── 参数校验 ──
 if len(sys.argv) < 2:
@@ -202,11 +203,28 @@ FONT_CANDIDATES = [
     "C:/Windows/Fonts/msyh.ttc",
 ]
 
+def extract_sc_font_from_ttc(data):
+    """从 TTC 字体集合中提取简体中文（SC）字体，避免 PyMuPDF 默认使用 JP 字体"""
+    if data[:4] != b"ttcf":
+        return data
+    try:
+        buf = io.BytesIO(data)
+        ttc = ttLib.TTFont(buf, fontNumber=2)
+        out = io.BytesIO()
+        ttc.save(out)
+        return out.getvalue()
+    except Exception:
+        return data
+
+
 CJK_DATA = None
+CJK_PATH = None
 for _path in FONT_CANDIDATES:
     if os.path.exists(_path):
+        CJK_PATH = _path
         with open(_path, "rb") as f:
-            CJK_DATA = f.read()
+            raw = f.read()
+            CJK_DATA = extract_sc_font_from_ttc(raw)
         break
 
 if CJK_DATA is None:
@@ -216,7 +234,7 @@ if CJK_DATA is None:
     print("  Windows: 系统自带 simsun.ttc")
     sys.exit(1)
 
-FONT = "MySongti"
+FONT = "MySongtiSC"
 MEASURE = fitz.Font(fontbuffer=CJK_DATA)
 def tw(text, fs):
     return MEASURE.text_length(text, fontsize=fs)
