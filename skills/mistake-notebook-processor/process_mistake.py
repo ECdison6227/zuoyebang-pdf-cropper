@@ -2,10 +2,8 @@
 """
 处理作业帮错题本 PDF —— 遮盖品牌 + 封面页 + 自动识别知识点
 """
-import fitz, re, os, sys, datetime, io, tempfile
-from subset_fonts import subset_pdf_fonts
+import fitz, re, os, sys, datetime, io
 from fontTools import ttLib
-from fontTools import subset as font_subset
 
 # ── 参数校验 ──
 if len(sys.argv) < 2:
@@ -311,66 +309,7 @@ def extract_sc_font_from_ttc(data):
         return data
 
 
-def subset_font_data(font_data, chars):
-    """对字体数据做子集化，只保留指定字符，从源头减小体积并保证嵌入完整"""
-    with tempfile.NamedTemporaryFile(suffix=".ttf", delete=False) as f:
-        f.write(font_data)
-        tmp_path = f.name
-    try:
-        options = font_subset.Options()
-        options.layout_features = ["*"]
-        options.name_IDs = ["*"]
-        options.glyph_names = True
-        options.notdef_outline = True
-        options.recalc_bounds = True
-        options.recalc_timestamp = True
-        options.drop_tables = ["DSIG", "VORG", "hdmx", "kern"]
-
-        font = font_subset.load_font(tmp_path, options)
-        subsetter = font_subset.Subsetter(options)
-        subsetter.populate(text=chars)
-        subsetter.subset(font)
-
-        buf = io.BytesIO()
-        font.save(buf)
-        return buf.getvalue()
-    finally:
-        try:
-            os.remove(tmp_path)
-        except Exception:
-            pass
-
-
-# ── 收集本 PDF 会用到的所有字符，用于字体子集化 ──
-all_chars = set(full_text)
-all_chars.update(" \n\r\t\u00a0•|/")
-
-# 封面固定文案
-all_chars.update(f"{subj}  错题整理笔记")
-all_chars.update(f"整理日期：{date_str or '未知'}")
-all_chars.update("注意要点：本次包含知识点：题目掌握情况：掌握未掌握需练习")
-all_chars.update("edsionc.top  |  2014184720@qq.com")
-
-# 学科提示与规则
-for rules in SUBJECT_RULES.values():
-    for r in rules:
-        all_chars.update(r)
-for tip in SUBJECT_TIPS.values():
-    all_chars.update(tip)
-
-# 知识点、题号
-for kp in matched:
-    all_chars.update(kp)
-for pt in problem_titles:
-    all_chars.update(pt)
-
-# 页眉页脚（hdr_title 在下方计算，但主题已知）
-hdr_title = f"{matched[0]}, {matched[1]} 等" if len(matched) > 2 else (topic_str if matched else "综合")
-all_chars.update(f"{date_str}  |  {hdr_title}  |  {subj}")
-
-char_string = "".join(sorted(all_chars))
-
-# ── 加载并子集化 CJK 字体 ──
+# ── 加载完整 CJK 字体（不子集化，保证跨平台兼容）──
 CJK_DATA = None
 CJK_PATH = None
 for _path in FONT_CANDIDATES:
@@ -387,9 +326,6 @@ if CJK_DATA is None:
     print("  Linux:   sudo apt install fonts-noto-cjk")
     print("  Windows: 系统自带 simsun.ttc")
     sys.exit(1)
-
-# 从源头子集化：只保留本 PDF 实际用到的字符，体积小且嵌入完整
-CJK_DATA = subset_font_data(CJK_DATA, char_string)
 
 FONT = "MySongtiSC"
 MEASURE = fitz.Font(fontbuffer=CJK_DATA)
@@ -477,6 +413,7 @@ for p in cover:
 
 # ── 处理正文页 ──
 doc = fitz.open(INPUT)
+hdr_title = f"{matched[0]}, {matched[1]} 等" if len(matched) > 2 else (topic_str if matched else "综合")
 
 for page in doc:
     pw, ph = page.rect.width, page.rect.height
@@ -507,13 +444,6 @@ cover.save(output, garbage=4, deflate=True)
 cover.close()
 doc.close()
 
-# ── 字体子集化：从源头减小文件体积 ──
-try:
-    result = subset_pdf_fonts(output, verbose=False)
-    print(f"✅ {os.path.basename(output)}")
-    print(f"   知识点: {topic_str}")
-    print(f"   体积: {result['original_size']/1024/1024:.2f} MB → {result['subset_size']/1024/1024:.2f} MB (压缩 {result['ratio']:.1f}%)")
-except Exception as e:
-    print(f"✅ {os.path.basename(output)}")
-    print(f"   知识点: {topic_str}")
-    print(f"   字体子集化失败（不影响使用）: {e}")
+print(f"✅ {os.path.basename(output)}")
+print(f"   知识点: {topic_str}")
+print(f"   体积: {os.path.getsize(output)/1024/1024:.2f} MB")
