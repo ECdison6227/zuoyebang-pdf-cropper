@@ -51,12 +51,21 @@ def _find_embedded_font_xrefs(doc):
 
 
 def _is_sc_font(name):
-    """根据名称表判断是否为简体中文（SC）字体，排除繁体（TC）"""
+    """根据名称表判断是否为简体中文（SC）字体，排除繁体（TC）/日文/韩文"""
     name = name.lower()
-    sc_keywords = ("sc", "simplified", "简", "songti-sc", "stsongti-sc",
-                   "hiraginosansgb", "notosanscjk-sc")
-    tc_keywords = ("tc", "traditional", "繁", "tw", "hk")
-    return any(k in name for k in sc_keywords) and not any(k in name for k in tc_keywords)
+    # 精确匹配 SC / 简体关键字（避免 'sc' 子串误命中 NotoSansCJKjp 中的 'sc'）
+    sc_keywords = (
+        " cjk sc", " cjk-sc",              # Noto Sans CJK SC
+        "songti sc", "stsongti-sc",        # 宋体-简
+        "hiraginosansgb",                   # 冬青黑体简体
+        "notosanscjksc", "notosansmonocjksc",  # Noto CJK SC PostScript
+        "simplified", "简体", "简",
+    )
+    # 排除繁体、日文、韩文、港澳
+    non_sc_keywords = ("jp", "kr", "hk", "tw", "tc", "traditional", "繁")
+    if any(k in name for k in non_sc_keywords):
+        return False
+    return any(k in name for k in sc_keywords)
 
 
 def _font_weight_score(name):
