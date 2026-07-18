@@ -50,6 +50,62 @@ def _find_embedded_font_xrefs(doc):
     return [x[0] for x in font_xrefs]
 
 
+def _is_sc_font(name):
+    """根据名称表判断是否为简体中文（SC）字体，排除繁体（TC）"""
+    name = name.lower()
+    sc_keywords = ("sc", "simplified", "简", "songti-sc", "stsongti-sc",
+                   "hiraginosansgb", "notosanscjk-sc")
+    tc_keywords = ("tc", "traditional", "繁", "tw", "hk")
+    return any(k in name for k in sc_keywords) and not any(k in name for k in tc_keywords)
+
+
+def _font_weight_score(name):
+    """字体权重评分：优先常规体，其次粗体，避免黑体/细体"""
+    name = name.lower()
+    if "regular" in name or "normal" in name or "常规" in name:
+        return 100
+    if "bold" in name or "粗体" in name:
+        return 80
+    if "light" in name or "细体" in name:
+        return 40
+    if "black" in name or "黑体" in name:
+        return 20
+    return 60
+
+
+def _find_sc_font_index(path_or_buf):
+    """在 TTC 中查找简体中文（SC）字体索引，优先常规体，找不到返回 0"""
+    try:
+        ttc = ttLib.TTFont(path_or_buf, fontNumber=0)
+        num_fonts = ttc.reader.numFonts
+        ttc.close()
+        best_idx = 0
+        best_score = -1
+        for i in range(num_fonts):
+            try:
+                font = ttLib.TTFont(path_or_buf, fontNumber=i)
+                name_table = font.get("name")
+                font_score = -1
+                for rec in name_table.names:
+                    if rec.nameID in (1, 4, 6):
+                        try:
+                            name = rec.toStr()
+                            if _is_sc_font(name):
+                                font_score = max(font_score, _font_weight_score(name))
+                        except Exception:
+                            pass
+                font.close()
+                if font_score > best_score:
+                    best_score = font_score
+                    best_idx = i
+            except Exception:
+                pass
+        return best_idx
+    except Exception:
+        pass
+    return 0
+
+
 def _subset_font_data(font_data, text, verbose=False):
     """对单个字体数据做子集化，返回子集化后的字节"""
     # 判断是否为 TrueType Collection
@@ -61,8 +117,9 @@ def _subset_font_data(font_data, text, verbose=False):
 
     try:
         if is_ttc:
-            # TTC 需要先取出单个字体
-            ttc_font = ttLib.TTFont(tmp_path, fontNumber=0)
+            # TTC 需要先取出单个字体；优先取简体中文（SC），避免繁体乱码
+            idx = _find_sc_font_index(tmp_path)
+            ttc_font = ttLib.TTFont(tmp_path, fontNumber=idx)
             ttc_font.save(tmp_path)
             ttc_font.close()
 

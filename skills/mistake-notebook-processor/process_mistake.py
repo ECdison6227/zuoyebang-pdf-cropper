@@ -2,9 +2,10 @@
 """
 处理作业帮错题本 PDF —— 遮盖品牌 + 封面页 + 自动识别知识点
 """
-import fitz, re, os, sys, datetime, io
+import fitz, re, os, sys, datetime, io, tempfile
 from subset_fonts import subset_pdf_fonts
 from fontTools import ttLib
+from fontTools import subset as font_subset
 
 # ── 参数校验 ──
 if len(sys.argv) < 2:
@@ -157,6 +158,32 @@ SUBJECT_TOPICS = {
     ],
 }
 
+SUBJECT_RULES = {
+    "数学": ["• 图形题：先用铅笔作图辅助思考",
+             "• 卡住时：优先检查题目中未使用的条件",
+             "• 思维难度过大：适当跳题，回头再补",
+             "• 每题预留三栏解题区：过程 / 思路 / 知识点"],
+    "物理": ["• 画图：受力分析图、运动过程图必画",
+             "• 卡住时：优先列出已知量和未知量",
+             "• 注意单位统一（SI），检查量纲",
+             "• 每题预留三栏解题区：过程 / 思路 / 知识点"],
+    "化学": ["• 写方程式先检查配平和反应条件",
+             "• 有机题：关注官能团决定性质",
+             "• 卡住时：回忆相关物质的特征反应",
+             "• 每题预留三栏解题区：过程 / 思路 / 知识点"],
+    "生物": ["• 遗传题：画遗传图解辅助分析",
+             "• 实验题：注意自变量和因变量",
+             "• 卡住时：回归课本基本概念",
+             "• 每题预留三栏解题区：过程 / 思路 / 知识点"],
+}
+
+SUBJECT_TIPS = {
+    "数学": "提示：图形题用铅笔作图 | 卡住时检查未用条件 | 适当跳题",
+    "物理": "提示：画受力分析图 | 注意单位统一 | 适当跳题",
+    "化学": "提示：方程式检查配平 | 关注官能团和反应条件 | 适当跳题",
+    "生物": "提示：遗传题画遗传图解 | 回归课本概念 | 适当跳题",
+}
+
 TOPICS = SUBJECT_TOPICS.get(subject, [])
 
 seen = set()
@@ -203,13 +230,70 @@ FONT_CANDIDATES = [
     "C:/Windows/Fonts/msyh.ttc",
 ]
 
+def _is_sc_font(name):
+    """根据名称表判断是否为简体中文（SC）字体，排除繁体（TC）"""
+    name = name.lower()
+    sc_keywords = ("sc", "simplified", "简", "songti-sc", "stsongti-sc",
+                   "hiraginosansgb", "notosanscjk-sc")
+    tc_keywords = ("tc", "traditional", "繁", "tw", "hk")
+    return any(k in name for k in sc_keywords) and not any(k in name for k in tc_keywords)
+
+
+def _font_weight_score(name):
+    """字体权重评分：优先常规体，其次粗体，避免黑体/细体"""
+    name = name.lower()
+    if "regular" in name or "normal" in name or "常规" in name:
+        return 100
+    if "bold" in name or "粗体" in name:
+        return 80
+    if "light" in name or "细体" in name:
+        return 40
+    if "black" in name or "黑体" in name:
+        return 20
+    return 60
+
+
+def _find_sc_font_index(buf):
+    """在 TTC 中查找简体中文（SC）字体索引，优先常规体，找不到返回 0"""
+    try:
+        ttc = ttLib.TTFont(buf, fontNumber=0)
+        num_fonts = ttc.reader.numFonts
+        ttc.close()
+        best_idx = 0
+        best_score = -1
+        for i in range(num_fonts):
+            try:
+                font = ttLib.TTFont(buf, fontNumber=i)
+                name_table = font.get("name")
+                font_score = -1
+                for rec in name_table.names:
+                    if rec.nameID in (1, 4, 6):  # Family / Full / PostScript
+                        try:
+                            name = rec.toStr()
+                            if _is_sc_font(name):
+                                font_score = max(font_score, _font_weight_score(name))
+                        except Exception:
+                            pass
+                font.close()
+                if font_score > best_score:
+                    best_score = font_score
+                    best_idx = i
+            except Exception:
+                pass
+        return best_idx
+    except Exception:
+        pass
+    return 0
+
+
 def extract_sc_font_from_ttc(data):
-    """从 TTC 字体集合中提取简体中文（SC）字体，避免 PyMuPDF 默认使用 JP 字体"""
+    """从 TTC 字体集合中提取简体中文（SC）字体，避免嵌入繁体/日文导致乱码"""
     if data[:4] != b"ttcf":
         return data
     try:
         buf = io.BytesIO(data)
-        ttc = ttLib.TTFont(buf, fontNumber=2)
+        idx = _find_sc_font_index(buf)
+        ttc = ttLib.TTFont(buf, fontNumber=idx)
         out = io.BytesIO()
         ttc.save(out)
         return out.getvalue()
@@ -217,6 +301,66 @@ def extract_sc_font_from_ttc(data):
         return data
 
 
+def subset_font_data(font_data, chars):
+    """对字体数据做子集化，只保留指定字符，从源头减小体积并保证嵌入完整"""
+    with tempfile.NamedTemporaryFile(suffix=".ttf", delete=False) as f:
+        f.write(font_data)
+        tmp_path = f.name
+    try:
+        options = font_subset.Options()
+        options.layout_features = ["*"]
+        options.name_IDs = ["*"]
+        options.glyph_names = True
+        options.notdef_outline = True
+        options.recalc_bounds = True
+        options.recalc_timestamp = True
+        options.drop_tables = ["DSIG", "VORG", "hdmx", "kern"]
+
+        font = font_subset.load_font(tmp_path, options)
+        subsetter = font_subset.Subsetter(options)
+        subsetter.populate(text=chars)
+        subsetter.subset(font)
+
+        buf = io.BytesIO()
+        font.save(buf)
+        return buf.getvalue()
+    finally:
+        try:
+            os.remove(tmp_path)
+        except Exception:
+            pass
+
+
+# ── 收集本 PDF 会用到的所有字符，用于字体子集化 ──
+all_chars = set(full_text)
+all_chars.update(" \n\r\t\u00a0•|/")
+
+# 封面固定文案
+all_chars.update(f"{subj}  错题整理笔记")
+all_chars.update(f"整理日期：{date_str or '未知'}")
+all_chars.update("注意要点：本次包含知识点：题目掌握情况：掌握未掌握需练习")
+all_chars.update("edsionc.top  |  2014184720@qq.com")
+
+# 学科提示与规则
+for rules in SUBJECT_RULES.values():
+    for r in rules:
+        all_chars.update(r)
+for tip in SUBJECT_TIPS.values():
+    all_chars.update(tip)
+
+# 知识点、题号
+for kp in matched:
+    all_chars.update(kp)
+for pt in problem_titles:
+    all_chars.update(pt)
+
+# 页眉页脚（hdr_title 在下方计算，但主题已知）
+hdr_title = f"{matched[0]}, {matched[1]} 等" if len(matched) > 2 else (topic_str if matched else "综合")
+all_chars.update(f"{date_str}  |  {hdr_title}  |  {subj}")
+
+char_string = "".join(sorted(all_chars))
+
+# ── 加载并子集化 CJK 字体 ──
 CJK_DATA = None
 CJK_PATH = None
 for _path in FONT_CANDIDATES:
@@ -233,6 +377,9 @@ if CJK_DATA is None:
     print("  Linux:   sudo apt install fonts-noto-cjk")
     print("  Windows: 系统自带 simsun.ttc")
     sys.exit(1)
+
+# 从源头子集化：只保留本 PDF 实际用到的字符，体积小且嵌入完整
+CJK_DATA = subset_font_data(CJK_DATA, char_string)
 
 FONT = "MySongtiSC"
 MEASURE = fitz.Font(fontbuffer=CJK_DATA)
@@ -267,24 +414,6 @@ cp.draw_line((MP + 20, 215), (PW - MP - 20, 215), color=(0.8, 0.8, 0.8), width=0
 sec_y = 240
 fs = 11
 cp.insert_text((MP, sec_y), "注意要点：", fontname=FONT, fontsize=fs, color=(0, 0, 0))
-SUBJECT_RULES = {
-    "数学": ["• 图形题：先用铅笔作图辅助思考",
-             "• 卡住时：优先检查题目中未使用的条件",
-             "• 思维难度过大：适当跳题，回头再补",
-             "• 每题预留三栏解题区：过程 / 思路 / 知识点"],
-    "物理": ["• 画图：受力分析图、运动过程图必画",
-             "• 卡住时：优先列出已知量和未知量",
-             "• 注意单位统一（SI），检查量纲",
-             "• 每题预留三栏解题区：过程 / 思路 / 知识点"],
-    "化学": ["• 写方程式先检查配平和反应条件",
-             "• 有机题：关注官能团决定性质",
-             "• 卡住时：回忆相关物质的特征反应",
-             "• 每题预留三栏解题区：过程 / 思路 / 知识点"],
-    "生物": ["• 遗传题：画遗传图解辅助分析",
-             "• 实验题：注意自变量和因变量",
-             "• 卡住时：回归课本基本概念",
-             "• 每题预留三栏解题区：过程 / 思路 / 知识点"],
-}
 rules = SUBJECT_RULES.get(subj, SUBJECT_RULES["数学"])
 for i, r in enumerate(rules):
     cp.insert_text((MP + 10, sec_y + 22 + i * 18), r,
@@ -338,7 +467,6 @@ for p in cover:
 
 # ── 处理正文页 ──
 doc = fitz.open(INPUT)
-hdr_title = f"{matched[0]}, {matched[1]} 等" if len(matched) > 2 else (topic_str if matched else "综合")
 
 for page in doc:
     pw, ph = page.rect.width, page.rect.height
@@ -350,12 +478,6 @@ for page in doc:
     hdr = f"{date_str}  |  {hdr_title}  |  {subj}"
     x = (pw - tw(hdr, 9)) / 2
     page.insert_text((x, MP + 14), hdr, fontname=FONT, fontsize=9, color=(0.35, 0.35, 0.35))
-    SUBJECT_TIPS = {
-        "数学": "提示：图形题用铅笔作图 | 卡住时检查未用条件 | 适当跳题",
-        "物理": "提示：画受力分析图 | 注意单位统一 | 适当跳题",
-        "化学": "提示：方程式检查配平 | 关注官能团和反应条件 | 适当跳题",
-        "生物": "提示：遗传题画遗传图解 | 回归课本概念 | 适当跳题",
-    }
     tip = SUBJECT_TIPS.get(subj, SUBJECT_TIPS["数学"])
     x = (pw - tw(tip, 7)) / 2
     page.insert_text((x, MP + 28), tip, fontname=FONT, fontsize=7, color=(0.65, 0.65, 0.65))
