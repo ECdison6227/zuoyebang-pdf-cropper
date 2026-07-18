@@ -30,9 +30,10 @@ lecture_num = None
 
 parts = basename.split("-")
 for p in parts:
-    m = re.search(r"(\d{8})", p)
+    # 仅把看起来像真实日期的 8 位数字当日期，避免课程主题全是数字时被误解析
+    m = re.search(r"(19\d{2}|20\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])", p)
     if m:
-        d = m.group(1)
+        d = m.group(0)
         date_str = f"{d[:4]}.{d[4:6]}.{d[6:]}"
     elif p in ("数学", "物理", "化学", "英语", "语文", "生物"):
         subject = p
